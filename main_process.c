@@ -28,6 +28,7 @@ int main()
   int commands_execution_time[n_commands];
 
   // reading file line by line
+  int counter = 0;
   while (fgets(buffer, 100, commands_file) != NULL){
         
     int len = strlen(buffer);
@@ -38,6 +39,10 @@ int main()
       
     printf("%s  => ", buffer);
     printf("%d\n", exe_time);
+
+    // store the results
+    strcpy(commands[counter], buffer);
+    commands_execution_time[counter] = exe_time;
     
   }
 
