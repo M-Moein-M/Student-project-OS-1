@@ -9,8 +9,12 @@
 #define WRITE_END 1
 int main(void)
 {
-  char write_msg[BUFFER_SIZE] = "Greetings";
+  char write_msg[BUFFER_SIZE] = "STRING A";
+  char write_msg2[BUFFER_SIZE] = "STRING B";
+
   char read_msg[BUFFER_SIZE];
+  char read_msg2[BUFFER_SIZE];
+
   int fd[2];
   pid_t pid;
 
@@ -29,30 +33,34 @@ int main(void)
   }
   if (pid > 0)
   { /* parent process */
-    /* close the unused end of the pipe */
-    close(fd[READ_END]);
+   
     /* write to the pipe */
     write(fd[WRITE_END], write_msg, strlen(write_msg) + 1);
-    /* close the WRITE_END of the pipe */
-    close(fd[WRITE_END]);
+
+    // waiting for all of the child processes
+    int stat;
+    pid_t finished_child_id;
+    while ((finished_child_id = wait(&stat)) != -1)
+    {
+      printf("child process is finished with id %d\n", finished_child_id);
+    }
+
+    read(fd[READ_END], read_msg2, BUFFER_SIZE);
+    printf("read from parent: %s\n", read_msg2);
   }
   else
   { /* child process */
-    /* close the unused end of the pipe */
-    close(fd[WRITE_END]);
+
     /* read from the pipe */
     read(fd[READ_END], read_msg, BUFFER_SIZE);
-    printf("read %s\n", read_msg);
+    printf("read from child: %s\n", read_msg);
 
-    /* close the WRITE_END of the pipe */
-    close(fd[READ_END]);
+    sleep(4); // sleep the child process
+
+    write(fd[WRITE_END], write_msg2, strlen(write_msg2) + 1);
+
     return 0;
   }
 
-  // waiting for all of the child processes
-  int stat;
-  while (wait(&stat) != -1)
-  {
-    printf("child process is finished\n");
-  }
+  
 }
