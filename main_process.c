@@ -59,6 +59,16 @@ int main()
       
       fst_level_processes[i].id = new_id;
       fst_level_processes[i].process_level = 1; // set the process level to 1
+      
+      // compact all the commands for i-th 1st level child
+      char command[BUFFER_SIZE] = "";
+      for (int j = 0; j < n_scnd_level_process; j++){
+        strcat(command, commands[i * n_scnd_level_process + j]);
+        strcat(command, "$");   // seperate commands with unique character
+      }
+
+      // send batch of commands to 1st level child process
+      write(fst_level_processes[i].pipe[WRITE_END], command, BUFFER_SIZE);  
 
     }else if (new_id == 0){ // first level child process
       run_first_level_process(fst_level_processes[i].pipe, n_scnd_level_process);
@@ -79,7 +89,9 @@ int main()
 
 // whatever the level 1 process need to do
 void run_first_level_process(int pipe[2], int n_scnd_level_process){
-  printf("1st level Child process with id %d      pipe read/out %d/%d\n", getpid(), pipe[READ_END], pipe[WRITE_END]);
+  char command[BUFFER_SIZE];
+  read(pipe[READ_END], command, BUFFER_SIZE);  
+  printf("received command Child process with id %d: %s\n", getpid(), command);
   return;
 }
 
@@ -97,7 +109,6 @@ void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file){
 
     // store the results
     strcpy(commands[counter], buffer);
-    printf("==> %s\n", commands[counter]);
     counter++;
   }
   return;
