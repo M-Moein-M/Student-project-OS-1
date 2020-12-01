@@ -16,7 +16,7 @@ struct Process {
 };
 
 int get_process_exe_time(char* command);
-void extract_file_data(char commands[][BUFFER_SIZE], int commands_execution_time [], FILE *commands_file);
+void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
 void run_first_level_process(int pipe[2], int n_scnd_level_process);
 
 int main()
@@ -39,9 +39,8 @@ int main()
   int n_commands = n_fst_level_process * n_scnd_level_process;
   
   char commands[n_commands][BUFFER_SIZE];
-  int commands_execution_time[n_commands];
 
-  extract_file_data(commands, commands_execution_time, commands_file);
+  extract_file_data(commands, commands_file);
 
   struct Process fst_level_processes[n_fst_level_process];
 
@@ -86,24 +85,20 @@ void run_first_level_process(int pipe[2], int n_scnd_level_process){
 
 
 // read from file and extract all the commands and their exe time
-void extract_file_data(char commands[][BUFFER_SIZE], int commands_execution_time [], FILE *commands_file){
+void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file){
   char buffer[BUFFER_SIZE];
   // reading file line by line
   int counter = 0;
   while (fgets(buffer, BUFFER_SIZE, commands_file) != NULL){
         
     int len = strlen(buffer);
+    if (len == 1) continue; // avoid new line character
     buffer[len-1] = 0;
-
-    int exe_time = get_process_exe_time(buffer);
-    if (exe_time == -1) continue; // skip incase it was \n at the end of lines
 
     // store the results
     strcpy(commands[counter], buffer);
-    commands_execution_time[counter] = exe_time;
-    
+    printf("==> %s\n", commands[counter]);
     counter++;
-    
   }
   return;
 }
