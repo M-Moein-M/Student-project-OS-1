@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 50
+#define BUFFER_SIZE 100
 
 int get_process_exe_time(char* command);
 void extract_file_data(char commands[][BUFFER_SIZE], int commands_execution_time [], FILE *commands_file);

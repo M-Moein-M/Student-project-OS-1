@@ -4,7 +4,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define BUFFER_SIZE 25
+#define BUFFER_SIZE 100
 #define READ_END 0
 #define WRITE_END 1
 int main(void)
@@ -55,10 +55,13 @@ int main(void)
     read(fd[READ_END], read_msg, BUFFER_SIZE);
     printf("read from child: %s\n", read_msg);
 
-    sleep(4); // sleep the child process
-
+    //sleep(4); // sleep the child process
     write(fd[WRITE_END], write_msg2, strlen(write_msg2) + 1);
 
+    // args for the program we'll run on exec
+    char *args[]={"./execute_command.out", read_msg, "arg1", "arg2", NULL};
+    execv(args[0],args);
+  
     return 0;
   }
 
