@@ -12,15 +12,24 @@
 int get_process_exe_time(char* command);
 
 
-void main(int argc, char* argv[]){
-  char *command = argv[1];
+int main(int argc, char* argv[]){
+  
+  char command[BUFFER_SIZE];
+  strcpy(command, argv[1]);
+
   int exe_time = get_process_exe_time(command);
   int pip_write_end = atoi(argv[2]);
-
-  sleep(exe_time); // sleep for the given amount in input
-  printf("command: %-25s  exe-time: %-5d  pipe_write: %-10d\n", command, exe_time,pip_write_end);
   
-  return;
+  printf("@Command: %-25s  exe-time: %-5d  pipe_write: %-10d\n", command, exe_time,pip_write_end);
+  
+  // preparing output
+  char msg[] = "Finished: ";
+  strcat(msg, command);
+
+  usleep(exe_time*1000*100); // sleep for exe-time
+  
+  write(pip_write_end, msg, strlen(msg)+1);
+  return 0;
 }
 
 // returns last written number in each line of commands file and removes it from input string

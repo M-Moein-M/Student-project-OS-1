@@ -53,11 +53,12 @@ int main()
       printf("Pipe failed");
       return 1;
     }
-    
     pid_t new_id = fork(); // create new child process
-
+   
     if (new_id > 0){ // parent process
-      
+      printf("First-level pipe%d: %d, %d\n"
+        , i, fst_level_processes[i].pipe[READ_END], fst_level_processes[i].pipe[WRITE_END]);
+
       fst_level_processes[i].id = new_id;
       fst_level_processes[i].process_level = 1; // set the process level to 1
       
@@ -73,7 +74,7 @@ int main()
 
     }else if (new_id == 0){ // first level child process
       run_first_level_process(fst_level_processes[i].pipe, n_scnd_level_process);
-      break;  // stop continuing the loop in child process
+      return 0;  // stop continuing the loop in child process
     }
 
   }
@@ -108,19 +109,18 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
       return;
     }
 
-    // write each command to a child process pipe
-    write(scnd_level_processes[i].pipe[WRITE_END], buffer[i], strlen(buffer[i])+1);
-
     pid_t new_id = fork(); // create new child process
     if (new_id > 0){ // parent process
       scnd_level_processes[i].id = new_id;
       scnd_level_processes[i].process_level = 2;
 
+      // write each command to a child process pipe
+      write(scnd_level_processes[i].pipe[WRITE_END], buffer[i], strlen(buffer[i])+1);
+
     }else if (new_id == 0){// child process
       run_second_level_process(scnd_level_processes[i].pipe);
-      break; // stop looping through
+      return; // stop looping through
     }
-
   }
 
   // wait for all the 2nd level processes
@@ -128,6 +128,15 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
   int stat;
   while ((finished_child_id = wait(&stat)) != -1){
     //printf("2nd level process finished with id %d\n", finished_child_id);
+    for (int i = 0; i < n_scnd_level_process; i++){
+      // find finished process
+      if (scnd_level_processes[i].id == finished_child_id){
+        char output[BUFFER_SIZE];
+        read(scnd_level_processes[i].pipe[READ_END], output, BUFFER_SIZE);
+        printf("%s\n",output);
+        break;
+      }
+    }
   }
 
   return;
