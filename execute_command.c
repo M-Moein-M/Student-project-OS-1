@@ -13,10 +13,12 @@ int get_process_exe_time(char* command);
 
 
 void main(int argc, char* argv[]){
-  //usleep(atoi(argv[argc-1])*1000); // sleep for the given amount in input
-  for (int i = 0; i < argc; i++){
-    printf("args: %s\n", argv[i]);
-  }
+  char *command = argv[1];
+  int exe_time = get_process_exe_time(command);
+  int pip_write_end = atoi(argv[2]);
+
+  sleep(exe_time); // sleep for the given amount in input
+  printf("command: %-25s  exe-time: %-5d  pipe_write: %-10d\n", command, exe_time,pip_write_end);
   
   return;
 }

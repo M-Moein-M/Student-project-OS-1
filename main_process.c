@@ -100,7 +100,6 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
 
   // store second level processes
   struct Process scnd_level_processes[n_scnd_level_process];
-
   // create 2nd level child processes
   for (int i = 0; i < n_scnd_level_process; i++){
     // create pipe
@@ -158,7 +157,10 @@ void run_second_level_process(int p_pipe[2]){
   read(p_pipe[READ_END], command, BUFFER_SIZE);  // read command passed in by parent
 
   // args for the program we'll run on exec
-  char *args[]={"./execute_command.out", command, NULL};
+  char pipe_write_end_to_stirng[50];
+  intToString(p_pipe[WRITE_END], pipe_write_end_to_stirng);
+
+  char *args[]={"./execute_command.out", command, pipe_write_end_to_stirng,NULL};
   execv(args[0],args);
 }
 
