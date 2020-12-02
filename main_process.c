@@ -70,7 +70,7 @@ int main()
       }
 
       // send batch of commands to 1st level child process
-      write(fst_level_processes[i].pipe[WRITE_END], command, BUFFER_SIZE);  
+      write(fst_level_processes[i].pipe[WRITE_END], command, strlen(command)+1);  
 
     }else if (new_id == 0){ // first level child process
       run_first_level_process(fst_level_processes[i].pipe, n_scnd_level_process);
@@ -92,9 +92,7 @@ int main()
 // whatever the level 1 process need to do
 void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
   char command[BUFFER_SIZE];
-  read(p_pipe[READ_END], command, BUFFER_SIZE);  
-  //printf("received command Child process with id %d: %s\n", getpid(), command);
-
+  read(p_pipe[READ_END], command, BUFFER_SIZE);  // read commands passed in by parent
 
   char buffer[n_scnd_level_process][BUFFER_SIZE]; // for saving commands of the n-th child
   
@@ -112,13 +110,13 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
       return;
     }
 
+    // write each command to a child process pipe
+    write(scnd_level_processes[i].pipe[WRITE_END], buffer[i], strlen(buffer[i])+1);
+
     pid_t new_id = fork(); // create new child process
     if (new_id > 0){ // parent process
       scnd_level_processes[i].id = new_id;
       scnd_level_processes[i].process_level = 2;
-
-      // write each command to a child process pipe
-      write(scnd_level_processes[i].pipe[WRITE_END], buffer[i], strlen(buffer[i]));
 
     }else if (new_id == 0){// child process
       run_second_level_process(scnd_level_processes[i].pipe);
@@ -157,7 +155,12 @@ void splitString(char * string, char buffer[][BUFFER_SIZE]){
 
 // run the code for second level process
 void run_second_level_process(int p_pipe[2]){
-  printf("@@2nd level process executing\n");
+  char command[BUFFER_SIZE];
+  read(p_pipe[READ_END], command, BUFFER_SIZE);  // read command passed in by parent
+
+  printf("@@%s@@\n", command);
+  // printf("2nd child process running\n");
+
   return;
 }
 
