@@ -15,7 +15,6 @@ struct Process {
   int process_level;
 };
 
-int get_process_exe_time(char* command);
 void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
 void run_first_level_process(int p_pipe[2], int n_scnd_level_process);
 void run_second_level_process(int p_pipe[2]);
@@ -82,7 +81,7 @@ int main()
   int stat;
   pid_t finished_child_id;
   while ((finished_child_id = wait(&stat)) != -1){
-    printf("child process is finished with id %d\n", finished_child_id);
+    //printf("child process is finished with id %d\n", finished_child_id);
   }
 
   fclose(commands_file);
@@ -129,7 +128,7 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
   pid_t finished_child_id;
   int stat;
   while ((finished_child_id = wait(&stat)) != -1){
-    printf("2nd level process finished with id %d\n", finished_child_id);
+    //printf("2nd level process finished with id %d\n", finished_child_id);
   }
 
   return;
@@ -158,10 +157,9 @@ void run_second_level_process(int p_pipe[2]){
   char command[BUFFER_SIZE];
   read(p_pipe[READ_END], command, BUFFER_SIZE);  // read command passed in by parent
 
-  printf("@@%s@@\n", command);
-  // printf("2nd child process running\n");
-
-  return;
+  // args for the program we'll run on exec
+  char *args[]={"./execute_command.out", command, NULL};
+  execv(args[0],args);
 }
 
 // read from file and extract all the commands and their exe time
@@ -180,30 +178,4 @@ void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file){
     counter++;
   }
   return;
-}
-
-// returns last written number in each line of commands file and removes it from input string
-int get_process_exe_time(char* command){
-  int len = strlen(command);
-
-  if (len == 0) return -1;
-
-  int i = len;
-  char c = command[i];
-  while (c != ' '){
-    i--;
-    c = command[i];
-  }
-  
-  int temp = i;
-
-  char exe_time_str [10];
-  for (int j = 0; i<len; i++){
-    exe_time_str[j] = command[i];
-    j++;
-  }
-
-  command[temp] = 0;
-
-  return atoi(exe_time_str);
 }

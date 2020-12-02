@@ -9,11 +9,40 @@
 #define READ_END 0
 #define WRITE_END 1
 
+int get_process_exe_time(char* command);
+
+
 void main(int argc, char* argv[]){
   //usleep(atoi(argv[argc-1])*1000); // sleep for the given amount in input
   for (int i = 0; i < argc; i++){
-    printf("-- %s\n", argv[i]);
+    printf("args: %s\n", argv[i]);
   }
   
   return;
+}
+
+// returns last written number in each line of commands file and removes it from input string
+int get_process_exe_time(char* command){
+  int len = strlen(command);
+
+  if (len == 0) return -1;
+
+  int i = len;
+  char c = command[i];
+  while (c != ' '){
+    i--;
+    c = command[i];
+  }
+  
+  int temp = i;
+
+  char exe_time_str [10];
+  for (int j = 0; i<len; i++){
+    exe_time_str[j] = command[i];
+    j++;
+  }
+
+  command[temp] = 0;
+
+  return atoi(exe_time_str);
 }
