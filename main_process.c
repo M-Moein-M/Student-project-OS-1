@@ -15,6 +15,7 @@ struct Process {
   int process_level;
 };
 
+void intToString(int a, char result[]);
 void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
 void run_first_level_process(int p_pipe[2], int n_scnd_level_process);
 void run_second_level_process(int p_pipe[2]);
@@ -22,7 +23,6 @@ void splitString(char*, char[][BUFFER_SIZE]);
 
 int main()
 {
-
   // loading and reading commands file
   FILE *commands_file = fopen("commands.txt", "r");
 
@@ -160,6 +160,33 @@ void run_second_level_process(int p_pipe[2]){
   // args for the program we'll run on exec
   char *args[]={"./execute_command.out", command, NULL};
   execv(args[0],args);
+}
+
+// result = toString(a)
+void intToString(int a, char result[]){
+  short int i = 0;
+  char z_char = '0';
+
+  int k = 0;
+  // reverse the number
+  while (a > 0){
+    int rem = a % 10;
+    k = k*10 + rem;
+    a = a / 10;
+  }
+
+  // convert to reverse of k
+  while (k > 0){
+    int rem = k % 10;
+    
+    result[i] = z_char + rem;
+    i++;
+
+    k = k / 10;
+  }
+  result[i] = 0;
+
+  return;
 }
 
 // read from file and extract all the commands and their exe time
