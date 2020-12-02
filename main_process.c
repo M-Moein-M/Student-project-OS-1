@@ -17,7 +17,9 @@ struct Process {
 
 int get_process_exe_time(char* command);
 void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
-void run_first_level_process(int pipe[2], int n_scnd_level_process);
+void run_first_level_process(int p_pipe[2], int n_scnd_level_process);
+void run_second_level_process(int p_pipe[2]);
+void splitString(char*, char[][BUFFER_SIZE]);
 
 int main()
 {
@@ -50,7 +52,7 @@ int main()
     // create new pipe for parent and new level 1 process
     if (pipe(fst_level_processes[i].pipe) == -1){
       printf("Pipe failed");
-      return 0;
+      return 1;
     }
     
     pid_t new_id = fork(); // create new child process
@@ -88,13 +90,76 @@ int main()
 }
 
 // whatever the level 1 process need to do
-void run_first_level_process(int pipe[2], int n_scnd_level_process){
+void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
   char command[BUFFER_SIZE];
-  read(pipe[READ_END], command, BUFFER_SIZE);  
-  printf("received command Child process with id %d: %s\n", getpid(), command);
+  read(p_pipe[READ_END], command, BUFFER_SIZE);  
+  //printf("received command Child process with id %d: %s\n", getpid(), command);
+
+
+  char buffer[n_scnd_level_process][BUFFER_SIZE]; // for saving commands of the n-th child
+  
+  // extract commands from string recieved from pipe
+  splitString(command, buffer);
+
+  // store second level processes
+  struct Process scnd_level_processes[n_scnd_level_process];
+
+  // create 2nd level child processes
+  for (int i = 0; i < n_scnd_level_process; i++){
+    // create pipe
+    if (pipe(scnd_level_processes[i].pipe) == -1){
+      printf("Pipe failed");
+      return;
+    }
+
+    pid_t new_id = fork(); // create new child process
+    if (new_id > 0){ // parent process
+      scnd_level_processes[i].id = new_id;
+      scnd_level_processes[i].process_level = 2;
+
+      // write each command to a child process pipe
+      write(scnd_level_processes[i].pipe[WRITE_END], buffer[i], strlen(buffer[i]));
+
+    }else if (new_id == 0){// child process
+      run_second_level_process(scnd_level_processes[i].pipe);
+      break; // stop looping through
+    }
+
+  }
+
+  // wait for all the 2nd level processes
+  pid_t finished_child_id;
+  int stat;
+  while ((finished_child_id = wait(&stat)) != -1){
+    printf("2nd level process finished with id %d\n", finished_child_id);
+  }
+
   return;
 }
 
+// split string with the special character $ and store each substring to buffer
+void splitString(char * string, char buffer[][BUFFER_SIZE]){
+  int child_num = 0; // keep track of the child we want to set the command for
+  int k = 0;
+
+  for (int i = 0; i < strlen(string); i++){
+    if (string[i] =='$'){
+      buffer[child_num][k] = 0;
+      child_num++;
+      k = 0;
+      continue;
+    }
+    buffer[child_num][k] = string[i];
+    k++;
+  } 
+}
+
+
+// run the code for second level process
+void run_second_level_process(int p_pipe[2]){
+  printf("@@2nd level process executing\n");
+  return;
+}
 
 // read from file and extract all the commands and their exe time
 void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file){
