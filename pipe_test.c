@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #define BUFFER_SIZE 100
 #define READ_END 0
@@ -42,7 +43,8 @@ int main(void)
     pid_t finished_child_id;
     while ((finished_child_id = wait(&stat)) != -1)
     {
-      printf("child process is finished with id %d\n", finished_child_id);
+      int exit_stat = WEXITSTATUS(stat);
+      printf("child process is finished with id %d stat=%d\n", finished_child_id, exit_stat);
     }
 
     read(fd[READ_END], read_msg2, BUFFER_SIZE);
@@ -57,12 +59,14 @@ int main(void)
 
     //sleep(4); // sleep the child process
     write(fd[WRITE_END], write_msg2, strlen(write_msg2) + 1);
+    
 
     // args for the program we'll run on exec
     char *args[]={"./execute_command.out", read_msg, "arg1", "arg2", NULL};
     execv(args[0],args);
-  
-    return 0;
+
+    // unreachable code
+    exit(0);
   }
 
   
