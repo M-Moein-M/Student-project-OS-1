@@ -17,7 +17,7 @@ struct Process {
 
 void intToString(int a, char result[]);
 void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
-void run_first_level_process(int p_pipe[2], int n_scnd_level_process);
+void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_process, int n_scnd_level_process, int process_number);
 void run_second_level_process(int p_pipe[2]);
 void splitString(char*, char[][BUFFER_SIZE]);
 int* get_pipe_from_pool(int process_level, int process_number, int pipe_pool[][2], int n_fst_level_process);
@@ -60,16 +60,16 @@ int main()
   for (int i = 0; i < n_fst_level_process; i++){
 
     // create new pipe for parent and new level 1 process
-    if (pipe(fst_level_processes[i].pipe) == -1){
-      printf("Pipe failed");
-      return 1;
-    }
+    int* pipe_temp = get_pipe_from_pool(1, i, pipe_pool, n_fst_level_process);
+
+    // copy pipes end
+    fst_level_processes[i].pipe[READ_END] = pipe_temp[READ_END];
+    fst_level_processes[i].pipe[WRITE_END] = pipe_temp[WRITE_END];
+
     pid_t new_id = fork(); // create new child process
    
     if (new_id > 0){ // parent process
-      printf("First-level pipe%d: %d, %d\n"
-        , i, fst_level_processes[i].pipe[READ_END], fst_level_processes[i].pipe[WRITE_END]);
-
+      
       fst_level_processes[i].id = new_id;
       fst_level_processes[i].process_level = 1; // set the process level to 1
       
@@ -84,7 +84,7 @@ int main()
       write(fst_level_processes[i].pipe[WRITE_END], command, strlen(command)+1);  
 
     }else if (new_id == 0){ // first level child process
-      run_first_level_process(fst_level_processes[i].pipe, n_scnd_level_process);
+      run_first_level_process(fst_level_processes[i].pipe, pipe_pool,n_fst_level_process,n_scnd_level_process, i);
       return 0;  // stop continuing the loop in child process
     }
 
@@ -112,7 +112,7 @@ int* get_pipe_from_pool(int process_level, int process_number, int pipe_pool[][2
 }
 
 // whatever the level 1 process need to do
-void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
+void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_process, int n_scnd_level_process, int process_number){
   char command[BUFFER_SIZE];
   read(p_pipe[READ_END], command, BUFFER_SIZE);  // read commands passed in by parent
 
@@ -125,11 +125,10 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
   struct Process scnd_level_processes[n_scnd_level_process];
   // create 2nd level child processes
   for (int i = 0; i < n_scnd_level_process; i++){
-    // create pipe
-    if (pipe(scnd_level_processes[i].pipe) == -1){
-      printf("Pipe failed");
-      return;
-    }
+    // get process pipe
+    int* pipe_temp = get_pipe_from_pool(2, n_scnd_level_process*process_number+i, pipe_pool, n_fst_level_process);
+    scnd_level_processes[i].pipe[READ_END] = pipe_temp[READ_END];
+    scnd_level_processes[i].pipe[WRITE_END] = pipe_temp[WRITE_END];
 
     pid_t new_id = fork(); // create new child process
     if (new_id > 0){ // parent process
@@ -149,16 +148,16 @@ void run_first_level_process(int p_pipe[2], int n_scnd_level_process){
   pid_t finished_child_id;
   int stat;
   while ((finished_child_id = wait(&stat)) != -1){
-    //printf("2nd level process finished with id %d\n", finished_child_id);
-    for (int i = 0; i < n_scnd_level_process; i++){
-      // find finished process
-      if (scnd_level_processes[i].id == finished_child_id){
-        char output[BUFFER_SIZE];
-        read(scnd_level_processes[i].pipe[READ_END], output, BUFFER_SIZE);
-        printf("%s\n",output);
-        break;
-      }
-    }
+    printf("2nd level process finished with id %d\n", finished_child_id);
+    // for (int i = 0; i < n_scnd_level_process; i++){
+    //   // find finished process
+    //   if (scnd_level_processes[i].id == finished_child_id){
+    //     char output[BUFFER_SIZE];
+    //     read(scnd_level_processes[i].pipe[READ_END], output, BUFFER_SIZE);
+    //     printf("%s\n",output);
+    //     break;
+    //   }
+    // }
   }
 
   return;

@@ -26,7 +26,7 @@ int main(int argc, char* argv[]){
   char msg[] = "Finished: ";
   strcat(msg, command);
 
-  usleep(exe_time*1000*100); // sleep for exe-time
+  usleep(exe_time*1000*300); // sleep for exe-time
   
   write(pip_write_end, msg, strlen(msg)+1);
   return 0;
