@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <time.h>
 
 #define BUFFER_SIZE 100
 #define READ_END 0
@@ -145,10 +146,15 @@ void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_pr
   }
 
   // wait for all the 2nd level processes
-  pid_t finished_child_id;
-  int stat;
-  while ((finished_child_id = wait(&stat)) != -1){
-    printf("2nd level process finished with id %d\n", finished_child_id);
+  pid_t temp_pid;
+  pid_t finished_child_id[n_scnd_level_process];
+  int finished_time[n_scnd_level_process];
+  int stat, counter=0;;
+  while ((temp_pid = wait(&stat)) != -1){
+    finished_child_id[counter] = temp_pid;
+    finished_time[counter] = (int)time(NULL);
+    counter++;
+    // printf("2nd level process finished with id %d\n", finished_child_id);
     // for (int i = 0; i < n_scnd_level_process; i++){
     //   // find finished process
     //   if (scnd_level_processes[i].id == finished_child_id){
@@ -158,6 +164,10 @@ void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_pr
     //     break;
     //   }
     // }
+  }
+  for(int i = 0; i<n_scnd_level_process; i++){
+    printf("2nd-level-process id: %5d   finished-time: %10d\n"
+    , finished_child_id[i], finished_time[i]);
   }
 
   return;
