@@ -40,8 +40,18 @@ int main()
   int n_commands = n_fst_level_process * n_scnd_level_process;
   
   char commands[n_commands][BUFFER_SIZE];
-
   extract_file_data(commands, commands_file);
+
+  // creating pipe pool
+  int all_needed_pipes = n_fst_level_process + n_fst_level_process * n_scnd_level_process;
+  int pipe_pool[all_needed_pipes][2];
+  for (int i = 0; i < all_needed_pipes; i++){
+    // create new pipe
+    if (pipe(pipe_pool[i]) == -1){
+      printf("Pipe failed");
+      return 1;
+    }
+  }
 
   struct Process fst_level_processes[n_fst_level_process];
 
