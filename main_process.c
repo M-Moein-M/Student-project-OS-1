@@ -20,6 +20,7 @@ void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
 void run_first_level_process(int p_pipe[2], int n_scnd_level_process);
 void run_second_level_process(int p_pipe[2]);
 void splitString(char*, char[][BUFFER_SIZE]);
+int* get_pipe_from_pool(int process_level, int process_number, int pipe_pool[][2], int n_fst_level_process);
 
 int main()
 {
@@ -97,6 +98,17 @@ int main()
 
   fclose(commands_file);
   return 0;
+}
+
+// retrieve pipe associated with process
+int* get_pipe_from_pool(int process_level, int process_number, int pipe_pool[][2], int n_fst_level_process){
+  int* p_pipe;
+  if (process_level == 1){ // level 1 process
+    p_pipe = pipe_pool[process_number];
+  }else{  // level 2 process
+    p_pipe = pipe_pool[n_fst_level_process+process_number];
+  }
+  return p_pipe;
 }
 
 // whatever the level 1 process need to do
