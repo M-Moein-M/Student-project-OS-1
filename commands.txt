@@ -1,4 +1,4 @@
-3 2
+1 6
 command1 arg1 1
 command2 arg1 arg2 2
 command3 arg1 7

@@ -6,7 +6,7 @@
 #include <unistd.h>
 #include <time.h>
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 1000
 #define READ_END 0
 #define WRITE_END 1
 
@@ -38,6 +38,8 @@ int main()
   fscanf(commands_file, "%d", &n_fst_level_process);
   fscanf(commands_file, "%d", &n_scnd_level_process);
 
+  printf("CONFIG: %d, %d\n", n_fst_level_process, n_scnd_level_process);
+
   // data structures for number of processes and commands and their execution time
   int n_commands = n_fst_level_process * n_scnd_level_process;
   
@@ -56,6 +58,9 @@ int main()
   }
 
   struct Process fst_level_processes[n_fst_level_process];
+
+  // set starting time for calculating executing time
+  clock_t time_started = clock();  
 
   // create first level child processes
   for (int i = 0; i < n_fst_level_process; i++){
@@ -93,14 +98,23 @@ int main()
 
   int stat;
   // waiting for all of the child processes  
-  while (wait(&stat) != -1);
+  while (wait(&stat) != -1){  }
+  clock_t time_finished = clock();  
+  int SCALE = 100000;
+  double time_spent = (double)(SCALE*time_finished - SCALE*time_started) / CLOCKS_PER_SEC;
+  printf("Executed all the commands in: %f\n", time_spent);
 
   // read results from pipes connected to level 1 processes
   char output[BUFFER_SIZE];
   for (int i = 0; i < n_fst_level_process; i++){
     int* p_pipe = get_pipe_from_pool(1, i, pipe_pool, n_fst_level_process);
     read(p_pipe[READ_END], output, BUFFER_SIZE);
-    printf("%s\n", output);
+    // printf("%s\n", output);
+
+    // extracting results from process level 1
+    char temp[n_scnd_level_process][BUFFER_SIZE];
+    splitString(output, temp);
+    for (int j = 0; j < n_scnd_level_process; j++) printf("%s\n", temp[j]);
   }
 
   fclose(commands_file);
@@ -155,7 +169,7 @@ void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_pr
   pid_t finished_child_id;
   // wait for all the 2nd level processes
   while ((finished_child_id = wait(&stat)) != -1){
-    printf("level 2 process with id: %d is finished\n", finished_child_id);
+    // printf("level 2 process with id: %d is finished\n", finished_child_id);
   }
 
 

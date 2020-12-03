@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <stdlib.h>
 
-#define BUFFER_SIZE 100
+#define BUFFER_SIZE 1000
 #define READ_END 0
 #define WRITE_END 1
 
