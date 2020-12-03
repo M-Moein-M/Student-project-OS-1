@@ -19,16 +19,14 @@ int main(int argc, char* argv[]){
 
   int exe_time = get_process_exe_time(command);
   int pip_write_end = atoi(argv[2]);
-  
-  // printf("@Command: %-25s  exe-time: %-5d  pipe_write: %-10d\n", command, exe_time,pip_write_end);
-  
+    
   // preparing output
   char msg[BUFFER_SIZE];
   intToString(getpid(), msg);
   strcat(command, " ");
   strcat(command, msg);
 
-  usleep(exe_time*1000*300); // sleep for exe-time
+  usleep(exe_time*1000*100); // sleep for exe-time
   
   write(pip_write_end, command, strlen(command)+1);
   return 0;

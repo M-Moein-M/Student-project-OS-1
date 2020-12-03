@@ -1,7 +1,4 @@
-1 6
-command1 arg1 1
-command2 arg1 arg2 2
-command3 arg1 7
-command4 arg1 3
-command5 arg1 arg2 4
+3 1
+command4 arg1 6
+command5 arg1 arg2 1
 command6 arg1 3

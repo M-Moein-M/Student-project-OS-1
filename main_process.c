@@ -4,7 +4,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
-#include <time.h>
+#include <sys/time.h>
 
 #define BUFFER_SIZE 1000
 #define READ_END 0
@@ -60,7 +60,9 @@ int main()
   struct Process fst_level_processes[n_fst_level_process];
 
   // set starting time for calculating executing time
-  clock_t time_started = clock();  
+  struct timeval stop, start;
+  gettimeofday(&start, NULL);
+
 
   // create first level child processes
   for (int i = 0; i < n_fst_level_process; i++){
@@ -99,10 +101,12 @@ int main()
   int stat;
   // waiting for all of the child processes  
   while (wait(&stat) != -1){  }
-  clock_t time_finished = clock();  
-  int SCALE = 100000;
-  double time_spent = (double)(SCALE*time_finished - SCALE*time_started) / CLOCKS_PER_SEC;
-  printf("Executed all the commands in: %f\n", time_spent);
+  
+  // calculate execution duration
+  gettimeofday(&stop, NULL);
+  unsigned long exe_time_us = (stop.tv_sec - start.tv_sec) * 1000000 + stop.tv_usec - start.tv_usec;
+  // unsigned long exe_time_ms = exe_time_us / 1000;
+  printf("Execution finished in %lu us\n", exe_time_us); 
 
   // read results from pipes connected to level 1 processes
   char output[BUFFER_SIZE];
