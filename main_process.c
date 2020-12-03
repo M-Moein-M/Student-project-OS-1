@@ -16,7 +16,7 @@ struct Process {
   int process_level;
 };
 
-void intToString(int a, char result[]);
+void intToString(int num, char str[]);
 void extract_file_data(char commands[][BUFFER_SIZE], FILE *commands_file);
 void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_process, int n_scnd_level_process, int process_number);
 void run_second_level_process(int p_pipe[2]);
@@ -90,11 +90,17 @@ int main()
     }
 
   }
-  // waiting for all of the child processes
+
   int stat;
-  pid_t finished_child_id;
-  while ((finished_child_id = wait(&stat)) != -1){
-    //printf("child process is finished with id %d\n", finished_child_id);
+  // waiting for all of the child processes  
+  while (wait(&stat) != -1);
+
+  // read results from pipes connected to level 1 processes
+  char output[BUFFER_SIZE];
+  for (int i = 0; i < n_fst_level_process; i++){
+    int* p_pipe = get_pipe_from_pool(1, i, pipe_pool, n_fst_level_process);
+    read(p_pipe[READ_END], output, BUFFER_SIZE);
+    printf("%s\n", output);
   }
 
   fclose(commands_file);
@@ -144,31 +150,24 @@ void run_first_level_process(int p_pipe[2],int pipe_pool[][2],int n_fst_level_pr
       return; // stop looping through
     }
   }
-
+  
+  int stat;
+  pid_t finished_child_id;
   // wait for all the 2nd level processes
-  pid_t temp_pid;
-  pid_t finished_child_id[n_scnd_level_process];
-  int finished_time[n_scnd_level_process];
-  int stat, counter=0;;
-  while ((temp_pid = wait(&stat)) != -1){
-    finished_child_id[counter] = temp_pid;
-    finished_time[counter] = (int)time(NULL);
-    counter++;
-    // printf("2nd level process finished with id %d\n", finished_child_id);
-    // for (int i = 0; i < n_scnd_level_process; i++){
-    //   // find finished process
-    //   if (scnd_level_processes[i].id == finished_child_id){
-    //     char output[BUFFER_SIZE];
-    //     read(scnd_level_processes[i].pipe[READ_END], output, BUFFER_SIZE);
-    //     printf("%s\n",output);
-    //     break;
-    //   }
-    // }
+  while ((finished_child_id = wait(&stat)) != -1){
+    printf("level 2 process with id: %d is finished\n", finished_child_id);
   }
-  for(int i = 0; i<n_scnd_level_process; i++){
-    printf("2nd-level-process id: %5d   finished-time: %10d\n"
-    , finished_child_id[i], finished_time[i]);
+
+
+  char output[BUFFER_SIZE];
+  char fst_level_results[BUFFER_SIZE] = "";
+  for(int i = 0; i < n_scnd_level_process; i++){
+    read(scnd_level_processes[i].pipe[READ_END], output, BUFFER_SIZE);
+    strcat(fst_level_results, output);
+    strcat(fst_level_results, "$");   // seperate commands with unique character
   }
+  // write the results on pipe and send them back to parent(process level 0)
+  write(p_pipe[WRITE_END], fst_level_results, BUFFER_SIZE);
 
   return;
 }
@@ -204,31 +203,21 @@ void run_second_level_process(int p_pipe[2]){
   execv(args[0],args);
 }
 
-// result = toString(a)
-void intToString(int a, char result[]){
-  short int i = 0;
-  char z_char = '0';
+// str = toString(num)
+void intToString(int num, char str[]){
+  int i, rem, len = 0, n;
 
-  int k = 0;
-  // reverse the number
-  while (a > 0){
-    int rem = a % 10;
-    k = k*10 + rem;
-    a = a / 10;
+  n = num;
+  while (n != 0){
+      len++;
+      n /= 10;
   }
-
-  // convert to reverse of k
-  while (k > 0){
-    int rem = k % 10;
-    
-    result[i] = z_char + rem;
-    i++;
-
-    k = k / 10;
+  for (i = 0; i < len; i++){
+      rem = num % 10;
+      num = num / 10;
+      str[len - (i + 1)] = rem + '0';
   }
-  result[i] = 0;
-
-  return;
+  str[len] = '\0';
 }
 
 // read from file and extract all the commands and their exe time

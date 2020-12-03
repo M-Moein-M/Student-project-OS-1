@@ -10,7 +10,7 @@
 #define WRITE_END 1
 
 int get_process_exe_time(char* command);
-
+void intToString(int a, char result[]);
 
 int main(int argc, char* argv[]){
   
@@ -20,15 +20,17 @@ int main(int argc, char* argv[]){
   int exe_time = get_process_exe_time(command);
   int pip_write_end = atoi(argv[2]);
   
-  printf("@Command: %-25s  exe-time: %-5d  pipe_write: %-10d\n", command, exe_time,pip_write_end);
+  // printf("@Command: %-25s  exe-time: %-5d  pipe_write: %-10d\n", command, exe_time,pip_write_end);
   
   // preparing output
-  char msg[] = "Finished: ";
-  strcat(msg, command);
+  char msg[BUFFER_SIZE];
+  intToString(getpid(), msg);
+  strcat(command, " ");
+  strcat(command, msg);
 
   usleep(exe_time*1000*300); // sleep for exe-time
   
-  write(pip_write_end, msg, strlen(msg)+1);
+  write(pip_write_end, command, strlen(command)+1);
   return 0;
 }
 
@@ -56,4 +58,21 @@ int get_process_exe_time(char* command){
   command[temp] = 0;
 
   return atoi(exe_time_str);
+}
+
+// str = toString(num)
+void intToString(int num, char str[]){
+  int i, rem, len = 0, n;
+
+  n = num;
+  while (n != 0){
+      len++;
+      n /= 10;
+  }
+  for (i = 0; i < len; i++){
+      rem = num % 10;
+      num = num / 10;
+      str[len - (i + 1)] = rem + '0';
+  }
+  str[len] = '\0';
 }
